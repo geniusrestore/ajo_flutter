@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'screens/auth_screen.dart';
-import 'onboarding/onboarding_screen.dart'; // ✅ Add this line
+import 'onboarding/onboarding_screen.dart';
+import 'screens/home_screen.dart';  // Make sure you have this file
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -33,7 +34,24 @@ class AjoApp extends StatelessWidget {
             ),
         useMaterial3: true,
       ),
-      home: const OnboardingScreen(), // ✅ Starts here
+      home: const AuthWrapper(),
     );
+  }
+}
+
+class AuthWrapper extends StatelessWidget {
+  const AuthWrapper({Key? key}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    // TODO: Replace with your actual auth check logic
+    final bool isLoggedIn = false; // example placeholder
+
+    if (isLoggedIn) {
+      return const HomeScreen();
+    } else {
+      return const OnboardingScreen();
+      // Or return AuthScreen() if you prefer
+    }
   }
 }
