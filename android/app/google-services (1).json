@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "182425698520",
+    "project_id": "my-ajo-project1",
+    "storage_bucket": "my-ajo-project1.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:182425698520:android:6c563e2ef216854ae017ad",
+        "android_client_info": {
+          "package_name": "com.ajo.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBgGW9krPz9gjAoGOVqG84HtLWzzwlif08"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

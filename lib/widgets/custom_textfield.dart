@@ -1,3 +1,4 @@
+// lib/widgets/custom_textfield.dart
 import 'package:flutter/material.dart';
 
 class CustomTextField extends StatelessWidget {
@@ -20,7 +21,6 @@ class CustomTextField extends StatelessWidget {
       decoration: InputDecoration(
         labelText: label,
         border: const OutlineInputBorder(),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       ),
     );
   }

@@ -4,7 +4,15 @@ import 'screens/auth_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp();
+
+  try {
+    print('⏳ Initializing Firebase...');
+    await Firebase.initializeApp();
+    print('✅ Firebase initialized successfully');
+  } catch (e) {
+    print('❌ Firebase initialization error: $e');
+  }
+
   runApp(const AjoApp());
 }
 
@@ -13,6 +21,7 @@ class AjoApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    print('🏁 Building AjoApp');
     return MaterialApp(
       title: 'Ajo App',
       debugShowCheckedModeBanner: false,
