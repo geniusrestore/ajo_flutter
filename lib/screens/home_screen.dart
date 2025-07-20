@@ -1,122 +1,97 @@
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
-
-  void _logout() async {
-    await FirebaseAuth.instance.signOut();
-  }
 
   @override
   Widget build(BuildContext context) {
     final user = FirebaseAuth.instance.currentUser;
 
     return Scaffold(
+      backgroundColor: Colors.green.shade50,
       appBar: AppBar(
-        title: const Text('Ajo Savings'),
+        backgroundColor: Colors.green,
+        foregroundColor: Colors.white,
+        elevation: 0,
+        title: const Text('Ajo Dashboard'),
         actions: [
           IconButton(
-            onPressed: _logout,
             icon: const Icon(Icons.logout),
-            tooltip: "Logout",
+            onPressed: () async {
+              await FirebaseAuth.instance.signOut();
+              Navigator.pushReplacementNamed(context, '/');
+            },
           )
         ],
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(20.0),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(24),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Text(
-              'Welcome, ${user?.email ?? "User"} 👋',
-              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+              'Welcome, ${user?.displayName ?? 'User'} 👋',
+              style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: Colors.green[900],
+                  ),
             ),
-            const SizedBox(height: 20),
-
-            // 💰 Total Savings Card
+            const SizedBox(height: 16),
             Card(
-              color: Colors.green.shade50,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
               elevation: 3,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
               child: Padding(
-                padding: const EdgeInsets.all(20.0),
-                child: Row(
-                  children: const [
-                    Icon(Icons.savings, size: 40, color: Colors.green),
-                    SizedBox(width: 15),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text("Total Savings",
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                            )),
-                        SizedBox(height: 5),
-                        Text("₦0.00",
-                            style: TextStyle(
-                              fontSize: 24,
-                              color: Colors.green,
-                              fontWeight: FontWeight.bold,
-                            )),
+                padding: const EdgeInsets.all(24),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Your Ajo Summary',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: const [
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text('Groups Joined'),
+                            SizedBox(height: 4),
+                            Text('0', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+                          ],
+                        ),
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text('Total Saved'),
+                            SizedBox(height: 4),
+                            Text('₦0', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+                          ],
+                        ),
                       ],
-                    )
+                    ),
                   ],
                 ),
               ),
             ),
-
-            const SizedBox(height: 30),
-
-            // ➕ Create or Join Group
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                ElevatedButton.icon(
-                  onPressed: () {
-                    // TODO: Navigate to create group
-                  },
-                  icon: const Icon(Icons.group_add),
-                  label: const Text("Create Group"),
-                ),
-                OutlinedButton.icon(
-                  onPressed: () {
-                    // TODO: Navigate to join group
-                  },
-                  icon: const Icon(Icons.login),
-                  label: const Text("Join Group"),
-                ),
-              ],
-            ),
-
-            const SizedBox(height: 30),
-
-            const Text(
-              "Your Groups",
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
-            ),
-            const SizedBox(height: 10),
-
-            // 🧾 List of Groups (Static for now)
-            Expanded(
-              child: ListView(
-                children: const [
-                  ListTile(
-                    leading: Icon(Icons.group),
-                    title: Text("July Ajo Group"),
-                    subtitle: Text("Next contribution: ₦5,000 on July 25"),
-                    trailing: Icon(Icons.chevron_right),
-                  ),
-                  ListTile(
-                    leading: Icon(Icons.group),
-                    title: Text("Family Fund"),
-                    subtitle: Text("Next contribution: ₦10,000 on July 28"),
-                    trailing: Icon(Icons.chevron_right),
-                  ),
-                ],
+            const SizedBox(height: 24),
+            ElevatedButton.icon(
+              onPressed: () {
+                // Navigate to create group or join group page (soon)
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.green,
+                padding: const EdgeInsets.symmetric(vertical: 14),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
               ),
-            )
+              icon: const Icon(Icons.group_add),
+              label: const Text('Create or Join Ajo Group'),
+            ),
           ],
         ),
       ),
