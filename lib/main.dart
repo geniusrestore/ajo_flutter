@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'screens/auth_screen.dart';
+import 'onboarding/onboarding_screen.dart'; // ✅ Add this line
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -32,7 +33,7 @@ class AjoApp extends StatelessWidget {
             ),
         useMaterial3: true,
       ),
-      home: const AuthScreen(),
+      home: const OnboardingScreen(), // ✅ Starts here
     );
   }
 }

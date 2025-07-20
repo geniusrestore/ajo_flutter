@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
-import '../services/auth_service.dart';
-import '../widgets/custom_textfield.dart';
-import 'home_screen.dart';
+import 'package:ajo_fixed/screens/home_screen.dart';
 
 class AuthScreen extends StatefulWidget {
   const AuthScreen({super.key});
@@ -11,29 +9,17 @@ class AuthScreen extends StatefulWidget {
 }
 
 class _AuthScreenState extends State<AuthScreen> {
-  final _emailController = TextEditingController();
-  final _passwordController = TextEditingController();
-  bool isLogin = true;
-  final _auth = AuthService();
-  bool loading = false;
+  final _formKey = GlobalKey<FormState>();
+  String _email = '';
+  String _password = '';
+  bool _isLogin = true;
 
-  void _submit() async {
-    setState(() => loading = true);
-    final email = _emailController.text.trim();
-    final password = _passwordController.text.trim();
-    final user = isLogin
-        ? await _auth.loginWithEmail(email, password)
-        : await _auth.registerWithEmail(email, password);
-    setState(() => loading = false);
-
-    if (user != null && mounted) {
+  void _submit() {
+    if (_formKey.currentState?.validate() ?? false) {
+      _formKey.currentState!.save();
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (_) => const HomeScreen()),
-      );
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Authentication failed")),
       );
     }
   }
@@ -41,34 +27,95 @@ class _AuthScreenState extends State<AuthScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text(isLogin ? 'Login' : 'Register')),
-      body: Padding(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          children: [
-            CustomTextField(controller: _emailController, label: 'Email'),
-            const SizedBox(height: 20),
-            CustomTextField(controller: _passwordController, label: 'Password', obscure: true),
-            const SizedBox(height: 30),
-            ElevatedButton(
-              onPressed: loading ? null : _submit,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.green,
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 24),
+      backgroundColor: Colors.green[50],
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(24.0),
+          child: Center(
+            child: SingleChildScrollView(
+              child: Form(
+                key: _formKey,
+                child: Column(
+                  children: [
+                    Image.asset('assets/logo.png', height: 100),
+                    const SizedBox(height: 24),
+                    Text(
+                      _isLogin ? 'Login to Ajo' : 'Register for Ajo',
+                      style: TextStyle(
+                        fontSize: 22,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.green[800],
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+                    TextFormField(
+                      key: const ValueKey('email'),
+                      decoration: const InputDecoration(
+                        labelText: 'Email',
+                        border: OutlineInputBorder(),
+                        prefixIcon: Icon(Icons.email),
+                      ),
+                      keyboardType: TextInputType.emailAddress,
+                      onSaved: (value) => _email = value!.trim(),
+                      validator: (value) {
+                        if (value == null || !value.contains('@')) {
+                          return 'Enter a valid email';
+                        }
+                        return null;
+                      },
+                    ),
+                    const SizedBox(height: 16),
+                    TextFormField(
+                      key: const ValueKey('password'),
+                      decoration: const InputDecoration(
+                        labelText: 'Password',
+                        border: OutlineInputBorder(),
+                        prefixIcon: Icon(Icons.lock),
+                      ),
+                      obscureText: true,
+                      onSaved: (value) => _password = value!.trim(),
+                      validator: (value) {
+                        if (value == null || value.length < 6) {
+                          return 'Password must be at least 6 characters';
+                        }
+                        return null;
+                      },
+                    ),
+                    const SizedBox(height: 24),
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        onPressed: _submit,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.green,
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                        ),
+                        child: Text(_isLogin ? 'Login' : 'Register'),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    TextButton(
+                      onPressed: () {
+                        setState(() {
+                          _isLogin = !_isLogin;
+                        });
+                      },
+                      child: Text(
+                        _isLogin
+                            ? "Don't have an account? Register"
+                            : "Already have an account? Login",
+                        style: const TextStyle(color: Colors.black54),
+                      ),
+                    ),
+                  ],
+                ),
               ),
-              child: loading
-                  ? const CircularProgressIndicator(color: Colors.white)
-                  : Text(isLogin ? 'Login' : 'Register'),
             ),
-            const SizedBox(height: 10),
-            TextButton(
-              onPressed: () => setState(() => isLogin = !isLogin),
-              child: Text(isLogin
-                  ? 'No account? Register'
-                  : 'Already have an account? Login'),
-            )
-          ],
+          ),
         ),
       ),
     );
