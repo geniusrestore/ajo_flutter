@@ -1,26 +1,12 @@
-allprojects {
+buildscript {
     repositories {
         google()
         mavenCentral()
     }
-}
-
-// Optional: Custom build directory (uncomment if needed for CI/CD or mono-repo setup)
-// val newBuildDir = rootProject.layout.buildDirectory.dir("../../build").get()
-// rootProject.layout.buildDirectory.set(newBuildDir)
-
-// subprojects {
-//     val newSubprojectBuildDir = newBuildDir.dir(name)
-//     layout.buildDirectory.set(newSubprojectBuildDir)
-//     evaluationDependsOn(":app")
-// }
-
-// Ensure all subprojects evaluate the app module
-subprojects {
-    evaluationDependsOn(":app")
-}
-
-// Clean task to delete build outputs
-tasks.register<Delete>("clean") {
-    delete(rootProject.buildDir)
+    dependencies {
+        // Use Android Gradle Plugin compatible with Gradle 8.12
+        classpath("com.android.tools.build:gradle:8.1.1")  
+        // Update Kotlin version if you use Kotlin in your app
+        classpath(kotlin("gradle-plugin", version = "1.8.22"))
+    }
 }
