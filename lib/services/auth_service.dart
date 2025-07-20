@@ -1,35 +1,15 @@
-import 'package:firebase_auth/firebase_auth.dart';
+// lib/services/auth_service.dart
 
 class AuthService {
-  final FirebaseAuth _auth = FirebaseAuth.instance;
-
-  Future<User?> registerWithEmail(String email, String password) async {
-    try {
-      final result = await _auth.createUserWithEmailAndPassword(
-        email: email,
-        password: password,
-      );
-      return result.user;
-    } catch (e) {
-      print("Register error: $e");
-      return null;
-    }
+  Future<void> login(String email, String password) async {
+    // Simulate login (replace with real logic like Firebase later)
+    await Future.delayed(const Duration(seconds: 1));
+    print("✅ Logged in with: $email");
   }
 
-  Future<User?> loginWithEmail(String email, String password) async {
-    try {
-      final result = await _auth.signInWithEmailAndPassword(
-        email: email,
-        password: password,
-      );
-      return result.user;
-    } catch (e) {
-      print("Login error: $e");
-      return null;
-    }
-  }
-
-  Future<void> logout() async {
-    await _auth.signOut();
+  Future<void> register(String email, String password) async {
+    // Simulate registration (replace with real logic like Firebase later)
+    await Future.delayed(const Duration(seconds: 1));
+    print("✅ Registered with: $email");
   }
 }

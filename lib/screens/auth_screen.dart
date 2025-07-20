@@ -1,25 +1,49 @@
+// lib/screens/auth_screen.dart
+
 import 'package:flutter/material.dart';
-import 'package:ajo_fixed/screens/home_screen.dart';
+import '../widgets/custom_text_field.dart';
+import '../services/auth_service.dart';
+import 'home_screen.dart';
 
 class AuthScreen extends StatefulWidget {
-  const AuthScreen({super.key});
+  const AuthScreen({Key? key}) : super(key: key);
 
   @override
   State<AuthScreen> createState() => _AuthScreenState();
 }
 
 class _AuthScreenState extends State<AuthScreen> {
-  final _formKey = GlobalKey<FormState>();
-  String _email = '';
-  String _password = '';
-  bool _isLogin = true;
+  final _emailController = TextEditingController();
+  final _passwordController = TextEditingController();
+  bool isLogin = true;
+  final AuthService _authService = AuthService();
 
-  void _submit() {
-    if (_formKey.currentState?.validate() ?? false) {
-      _formKey.currentState!.save();
+  void _handleAuth() async {
+    final email = _emailController.text.trim();
+    final password = _passwordController.text.trim();
+
+    if (email.isEmpty || password.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please fill in all fields')),
+      );
+      return;
+    }
+
+    try {
+      if (isLogin) {
+        await _authService.login(email, password);
+      } else {
+        await _authService.register(email, password);
+      }
+
+      // Go to HomeScreen
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (_) => const HomeScreen()),
+        MaterialPageRoute(builder: (context) => const HomeScreen()),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Auth error: $e')),
       );
     }
   }
@@ -27,94 +51,64 @@ class _AuthScreenState extends State<AuthScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.green[50],
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(24.0),
-          child: Center(
-            child: SingleChildScrollView(
-              child: Form(
-                key: _formKey,
-                child: Column(
-                  children: [
-                    Image.asset('assets/logo.png', height: 100),
-                    const SizedBox(height: 24),
-                    Text(
-                      _isLogin ? 'Login to Ajo' : 'Register for Ajo',
-                      style: TextStyle(
-                        fontSize: 22,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.green[800],
-                      ),
-                    ),
-                    const SizedBox(height: 24),
-                    TextFormField(
-                      key: const ValueKey('email'),
-                      decoration: const InputDecoration(
-                        labelText: 'Email',
-                        border: OutlineInputBorder(),
-                        prefixIcon: Icon(Icons.email),
-                      ),
-                      keyboardType: TextInputType.emailAddress,
-                      onSaved: (value) => _email = value!.trim(),
-                      validator: (value) {
-                        if (value == null || !value.contains('@')) {
-                          return 'Enter a valid email';
-                        }
-                        return null;
-                      },
-                    ),
-                    const SizedBox(height: 16),
-                    TextFormField(
-                      key: const ValueKey('password'),
-                      decoration: const InputDecoration(
-                        labelText: 'Password',
-                        border: OutlineInputBorder(),
-                        prefixIcon: Icon(Icons.lock),
-                      ),
-                      obscureText: true,
-                      onSaved: (value) => _password = value!.trim(),
-                      validator: (value) {
-                        if (value == null || value.length < 6) {
-                          return 'Password must be at least 6 characters';
-                        }
-                        return null;
-                      },
-                    ),
-                    const SizedBox(height: 24),
-                    SizedBox(
-                      width: double.infinity,
-                      child: ElevatedButton(
-                        onPressed: _submit,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.green,
-                          foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(vertical: 16),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                        ),
-                        child: Text(_isLogin ? 'Login' : 'Register'),
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    TextButton(
-                      onPressed: () {
-                        setState(() {
-                          _isLogin = !_isLogin;
-                        });
-                      },
-                      child: Text(
-                        _isLogin
-                            ? "Don't have an account? Register"
-                            : "Already have an account? Login",
-                        style: const TextStyle(color: Colors.black54),
-                      ),
-                    ),
-                  ],
+      backgroundColor: const Color(0xFFEFFEF2),
+      body: Center(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.symmetric(horizontal: 30),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(Icons.lock_outline, size: 80, color: Colors.green),
+              const SizedBox(height: 30),
+              Text(
+                isLogin ? 'Login to Ajo' : 'Create Ajo Account',
+                style: const TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.green,
                 ),
               ),
-            ),
+              const SizedBox(height: 30),
+              CustomTextField(
+                hintText: 'Email',
+                controller: _emailController,
+                keyboardType: TextInputType.emailAddress,
+                icon: Icons.email,
+              ),
+              CustomTextField(
+                hintText: 'Password',
+                controller: _passwordController,
+                obscureText: true,
+                icon: Icons.lock,
+              ),
+              const SizedBox(height: 20),
+              ElevatedButton(
+                onPressed: _handleAuth,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.green,
+                  padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 50),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                child: Text(
+                  isLogin ? 'Login' : 'Register',
+                  style: const TextStyle(fontSize: 18),
+                ),
+              ),
+              const SizedBox(height: 20),
+              TextButton(
+                onPressed: () {
+                  setState(() => isLogin = !isLogin);
+                },
+                child: Text(
+                  isLogin
+                      ? "Don't have an account? Register"
+                      : "Already have an account? Login",
+                  style: const TextStyle(color: Colors.black87),
+                ),
+              ),
+            ],
           ),
         ),
       ),
