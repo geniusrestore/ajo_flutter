@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'firebase_options.dart'; // ✅ new import
+import 'package:firebase_auth/firebase_auth.dart';
+import 'firebase_options.dart';
+
 import 'screens/auth_screen.dart';
 import 'onboarding/onboarding_screen.dart';
 import 'screens/home_screen.dart';
+import 'screens/verify_email_screen.dart'; // ✅ Add this
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -34,6 +37,10 @@ class AjoApp extends StatelessWidget {
         useMaterial3: true,
       ),
       home: const AuthWrapper(),
+      routes: {
+        '/home': (context) => const HomeScreen(),
+        '/verify': (context) => const VerifyEmailScreen(),
+      },
     );
   }
 }
@@ -43,7 +50,14 @@ class AuthWrapper extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final bool isLoggedIn = false;
-    return isLoggedIn ? const HomeScreen() : const OnboardingScreen();
+    final user = FirebaseAuth.instance.currentUser;
+
+    if (user == null) {
+      return const OnboardingScreen(); // Not logged in
+    } else if (!user.emailVerified) {
+      return const VerifyEmailScreen(); // Logged in but not verified
+    } else {
+      return const HomeScreen(); // Logged in and verified
+    }
   }
 }

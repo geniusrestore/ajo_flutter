@@ -9,6 +9,7 @@ class FirestoreService {
   Future<void> createOrUpdateUser({
     required String email,
     required String name,
+    String? phone,
   }) async {
     final uid = _auth.currentUser?.uid;
     if (uid == null) return;
@@ -19,8 +20,30 @@ class FirestoreService {
       'uid': uid,
       'email': email,
       'name': name,
+      if (phone != null) 'phone': phone,
       'joinedAt': FieldValue.serverTimestamp(),
     }, SetOptions(merge: true));
+  }
+
+  // ✅ Get current user document (for home screen)
+  Future<DocumentSnapshot?> getCurrentUserDoc() async {
+    final uid = _auth.currentUser?.uid;
+    if (uid == null) return null;
+
+    final doc = await _db.collection('users').doc(uid).get();
+    return doc.exists ? doc : null;
+  }
+
+  // ✅ Get user groups by IDs (for home screen)
+  Future<List<DocumentSnapshot>> getUserGroups(List<String> groupIds) async {
+    if (groupIds.isEmpty) return [];
+
+    final snapshot = await _db
+        .collection('groups')
+        .where(FieldPath.documentId, whereIn: groupIds)
+        .get();
+
+    return snapshot.docs;
   }
 
   // Create a new Ajo group
@@ -43,6 +66,11 @@ class FirestoreService {
       'createdAt': FieldValue.serverTimestamp(),
       'members': [uid],
     });
+
+    // Update user's joined groups
+    await _db.collection('users').doc(uid).set({
+      'joinedGroups': FieldValue.arrayUnion([groupRef.id]),
+    }, SetOptions(merge: true));
   }
 
   // Add a contribution to a group
