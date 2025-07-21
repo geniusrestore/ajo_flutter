@@ -1,4 +1,4 @@
-package com.example.ajo_fixed
+package com.example.ajo
 
 import io.flutter.embedding.android.FlutterActivity
 

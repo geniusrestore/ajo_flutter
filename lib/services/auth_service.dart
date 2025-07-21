@@ -18,14 +18,13 @@ class AuthService {
       );
 
       final user = userCredential.user;
-
       if (user != null && !user.emailVerified) {
         await user.sendEmailVerification();
-        await _auth.signOut(); // prevent login
-        return 'Please verify your email before logging in. A new verification email has been sent.';
+        await _auth.signOut();
+        return 'Please verify your email before logging in. A verification link has been sent.';
       }
 
-      return null; // success
+      return null; // Success
     } on FirebaseAuthException catch (e) {
       return e.message;
     }
@@ -43,16 +42,23 @@ class AuthService {
         password: password,
       );
 
-      // Save user to Firestore
+      final user = userCredential.user;
+      if (user == null) {
+        return 'Registration failed: user is null.';
+      }
+
+      // Save user data to Firestore with uid
       await _firestoreService.createOrUpdateUser(
+        uid: user.uid,
         email: email,
         name: name,
       );
 
       // Send verification email
-      await userCredential.user!.sendEmailVerification();
+      await user.sendEmailVerification();
 
-      return null; // success
+      await _auth.signOut(); // force them to verify before login
+      return 'A verification email has been sent. Please check your inbox before logging in.';
     } on FirebaseAuthException catch (e) {
       return e.message;
     }
@@ -63,30 +69,6 @@ class AuthService {
     await _auth.signOut();
   }
 
-  // RESEND VERIFICATION EMAIL
-  Future<String?> resendEmailVerification(String email, String password) async {
-    try {
-      final userCredential = await _auth.signInWithEmailAndPassword(
-        email: email,
-        password: password,
-      );
-
-      final user = userCredential.user;
-
-      if (user != null && !user.emailVerified) {
-        await user.sendEmailVerification();
-        await _auth.signOut(); // Log out after sending
-        return 'Verification email resent. Please check your inbox.';
-      } else {
-        return 'Email is already verified or user not found.';
-      }
-    } on FirebaseAuthException catch (e) {
-      return e.message;
-    } catch (e) {
-      return 'Failed to resend verification email.';
-    }
-  }
-
-  // Current user getter
+  // Current user
   User? get currentUser => _auth.currentUser;
 }

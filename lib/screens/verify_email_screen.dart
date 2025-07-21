@@ -1,84 +1,54 @@
 import 'package:flutter/material.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 
-class VerifyEmailScreen extends StatefulWidget {
+class VerifyEmailScreen extends StatelessWidget {
   const VerifyEmailScreen({Key? key}) : super(key: key);
-
-  @override
-  State<VerifyEmailScreen> createState() => _VerifyEmailScreenState();
-}
-
-class _VerifyEmailScreenState extends State<VerifyEmailScreen> {
-  bool _isEmailVerified = false;
-  bool _isLoading = false;
-
-  @override
-  void initState() {
-    super.initState();
-    checkEmailVerified();
-  }
-
-  Future<void> checkEmailVerified() async {
-    await FirebaseAuth.instance.currentUser?.reload();
-    final user = FirebaseAuth.instance.currentUser;
-
-    if (user != null && user.emailVerified) {
-      setState(() {
-        _isEmailVerified = true;
-      });
-
-      // Navigate to Home Screen
-      Navigator.pushReplacementNamed(context, '/home');
-    }
-  }
-
-  Future<void> resendEmailVerification() async {
-    setState(() => _isLoading = true);
-
-    try {
-      await FirebaseAuth.instance.currentUser?.sendEmailVerification();
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Verification email sent")),
-      );
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Error: $e")),
-      );
-    }
-
-    setState(() => _isLoading = false);
-  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("Verify Your Email")),
-      body: Padding(
-        padding: const EdgeInsets.all(20),
-        child: _isEmailVerified
-            ? const Center(child: Text("Email verified! Redirecting..."))
-            : Column(
-                mainAxisAlignment: MainAxisAlignment.center,
+      backgroundColor: Colors.green.shade50,
+      body: Center(
+        child: Padding(
+          padding: const EdgeInsets.all(24.0),
+          child: Card(
+            elevation: 5,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            child: Padding(
+              padding: const EdgeInsets.all(32.0),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
                 children: [
+                  Icon(Icons.mark_email_read_outlined, size: 64, color: Colors.green[700]),
+                  const SizedBox(height: 24),
+                  Text(
+                    'Verify Your Email',
+                    style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                          fontWeight: FontWeight.bold,
+                          color: Colors.green[800],
+                        ),
+                  ),
+                  const SizedBox(height: 16),
                   const Text(
-                    "A verification email has been sent to your email. Please verify it before continuing.",
-                    style: TextStyle(fontSize: 16),
+                    'We’ve sent a verification link to your email. Please check your inbox and click the link to activate your account.',
                     textAlign: TextAlign.center,
                   ),
-                  const SizedBox(height: 20),
+                  const SizedBox(height: 24),
                   ElevatedButton(
-                    onPressed: _isLoading ? null : resendEmailVerification,
-                    child: _isLoading
-                        ? const CircularProgressIndicator()
-                        : const Text("Resend Email"),
-                  ),
-                  const SizedBox(height: 20),
-                  ElevatedButton(
-                    onPressed: checkEmailVerified,
-                    child: const Text("I've Verified"),
+                    onPressed: () {
+                      Navigator.pop(context);
+                    },
+                    child: const Text('Back to Login'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.green,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                    ),
                   ),
                 ],
               ),
+            ),
+          ),
+        ),
       ),
     );
   }

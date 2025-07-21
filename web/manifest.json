@@ -1,6 +1,6 @@
 {
-    "name": "ajo_fixed",
-    "short_name": "ajo_fixed",
+    "name": "ajo",
+    "short_name": "ajo",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",

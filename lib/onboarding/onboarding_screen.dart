@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:ajo_fixed/screens/auth_screen.dart';
+import 'package:ajo/screens/auth_screen.dart';
 
 class OnboardingScreen extends StatelessWidget {
   const OnboardingScreen({super.key});
