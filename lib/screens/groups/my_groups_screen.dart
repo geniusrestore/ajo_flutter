@@ -19,6 +19,8 @@ class MyGroupsScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final currentUserId = FirebaseAuth.instance.currentUser!.uid;
+
     return Scaffold(
       appBar: AppBar(title: const Text('My Groups')),
       body: StreamBuilder<QuerySnapshot>(
@@ -38,12 +40,17 @@ class MyGroupsScreen extends StatelessWidget {
             itemCount: groups.length,
             itemBuilder: (context, index) {
               final group = groups[index];
+              final data = group.data() as Map<String, dynamic>;
+
+              final groupName = data['name'] ?? 'Unnamed Group';
+              final isAdmin = data['adminId'] == currentUserId;
+
               return Card(
                 margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                 child: ListTile(
-                  title: Text(group['name']),
+                  title: Text(groupName),
                   subtitle: Text(
-                      '${group['frequency']} • ₦${group['amountPerCycle']} • ${group['groupSize']} members'),
+                      '${data['frequency']} • ₦${data['amountPerCycle']} • ${data['groupSize']} members'),
                   trailing: ElevatedButton.icon(
                     icon: const Icon(Icons.chat),
                     label: const Text('Chat'),
@@ -58,7 +65,7 @@ class MyGroupsScreen extends StatelessWidget {
                         MaterialPageRoute(
                           builder: (context) => GroupChatScreen(
                             groupId: group.id,
-                            groupName: group['name'],
+                            groupName: groupName,
                           ),
                         ),
                       );
@@ -70,7 +77,8 @@ class MyGroupsScreen extends StatelessWidget {
                       MaterialPageRoute(
                         builder: (context) => GroupDetailsScreen(
                           groupId: group.id,
-                          isAdmin: false, // You can adjust this based on your logic
+                          groupName: groupName,
+                          isAdmin: isAdmin,
                         ),
                       ),
                     );

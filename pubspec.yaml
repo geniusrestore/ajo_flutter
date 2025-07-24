@@ -16,16 +16,17 @@ dependencies:
   firebase_core: ^3.15.1
   firebase_auth: ^5.6.2
   cloud_firestore: ^5.6.11
-  firebase_storage: 12.4.9  # ✅ for profile photo upload
+  firebase_storage: ^12.4.10  # ✅ for profile photo upload
 
   # ✅ Image picker for profile photo
   image_picker: ^1.1.1
 
   # ✅ Date formatting support
-  intl: ^0.18.1
+  intl: ^0.20.2
 
   # (Optional) For state management or UI improvements:
   provider: ^6.1.2
+  uuid: ^4.5.1
 
 dev_dependencies:
   flutter_test:

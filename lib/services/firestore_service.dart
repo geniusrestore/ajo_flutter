@@ -1,9 +1,11 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:uuid/uuid.dart';
 
 class FirestoreService {
   final FirebaseFirestore _db = FirebaseFirestore.instance;
   final FirebaseAuth _auth = FirebaseAuth.instance;
+  final Uuid _uuid = Uuid();
 
   // === USER METHODS ===
 
@@ -30,9 +32,13 @@ class FirestoreService {
   Future<DocumentSnapshot<Map<String, dynamic>>?> getCurrentUserDoc() async {
     final uid = _auth.currentUser?.uid;
     if (uid == null) return null;
-
     final doc = await _db.collection('users').doc(uid).get();
     return doc.exists ? doc : null;
+  }
+
+  Future<Map<String, dynamic>?> getUserById(String userId) async {
+    final doc = await _db.collection('users').doc(userId).get();
+    return doc.exists ? doc.data() : null;
   }
 
   Future<void> updateUserProfile({
@@ -52,7 +58,7 @@ class FirestoreService {
 
   // === GROUP METHODS ===
 
-  Future<void> createGroup({
+  Future<String?> createGroup({
     required String groupName,
     required String description,
     required double amount,
@@ -60,7 +66,7 @@ class FirestoreService {
     String? groupImageUrl,
   }) async {
     final uid = _auth.currentUser?.uid;
-    if (uid == null) return;
+    if (uid == null) return null;
 
     final groupRef = _db.collection('groups').doc();
 
@@ -81,15 +87,8 @@ class FirestoreService {
     await _db.collection('users').doc(uid).update({
       'joinedGroups': FieldValue.arrayUnion([groupRef.id]),
     });
-  }
 
-  Future<List<DocumentSnapshot<Map<String, dynamic>>>> getUserGroups(List<String> groupIds) async {
-    if (groupIds.isEmpty) return [];
-    final snapshot = await _db
-        .collection('groups')
-        .where(FieldPath.documentId, whereIn: groupIds)
-        .get();
-    return snapshot.docs;
+    return groupRef.id;
   }
 
   Future<void> sendJoinRequest(String groupId) async {
@@ -122,14 +121,51 @@ class FirestoreService {
     await _db.collection('groups').doc(groupId).collection('joinRequests').doc(userId).delete();
   }
 
-  Future<void> removeGroupMember(String groupId, String userId) async {
+  Future<void> removeMemberFromGroup(String groupId, String userId) async {
     await _db.collection('groups').doc(groupId).update({
       'members': FieldValue.arrayRemove([userId]),
+      'admins': FieldValue.arrayRemove([userId]),
     });
 
     await _db.collection('users').doc(userId).update({
       'joinedGroups': FieldValue.arrayRemove([groupId]),
     });
+  }
+
+  Future<void> makeUserAdmin(String groupId, String userId) async {
+    await _db.collection('groups').doc(groupId).update({
+      'admins': FieldValue.arrayUnion([userId]),
+    });
+  }
+
+  Future<void> removeUserAdmin(String groupId, String userId) async {
+    await _db.collection('groups').doc(groupId).update({
+      'admins': FieldValue.arrayRemove([userId]),
+    });
+  }
+
+  Future<List<Map<String, dynamic>>> getJoinRequests(String groupId) async {
+    final snapshot = await _db.collection('groups').doc(groupId).collection('joinRequests').get();
+    final requests = <Map<String, dynamic>>[];
+
+    for (var doc in snapshot.docs) {
+      final userId = doc.data()['userId'];
+      final user = await getUserById(userId);
+      if (user != null) {
+        requests.add(user);
+      }
+    }
+
+    return requests;
+  }
+
+  Future<List<DocumentSnapshot<Map<String, dynamic>>>> getUserGroups(List<String> groupIds) async {
+    if (groupIds.isEmpty) return [];
+    final snapshot = await _db
+        .collection('groups')
+        .where(FieldPath.documentId, whereIn: groupIds)
+        .get();
+    return snapshot.docs;
   }
 
   Future<List<DocumentSnapshot<Map<String, dynamic>>>> getPublicGroups() async {
@@ -147,13 +183,11 @@ class FirestoreService {
 
     if (memberIds.isEmpty) return [];
 
-    final snapshot = await _db.collection('users').where(FieldPath.documentId, whereIn: memberIds).get();
+    final snapshot = await _db
+        .collection('users')
+        .where(FieldPath.documentId, whereIn: memberIds)
+        .get();
 
-    return snapshot.docs.map((doc) => doc.data()).toList();
-  }
-
-  Future<List<Map<String, dynamic>>> getJoinRequests(String groupId) async {
-    final snapshot = await _db.collection('groups').doc(groupId).collection('joinRequests').get();
     return snapshot.docs.map((doc) => doc.data()).toList();
   }
 
@@ -164,6 +198,15 @@ class FirestoreService {
     final groupDoc = await _db.collection('groups').doc(groupId).get();
     final admins = List<String>.from(groupDoc.data()?['admins'] ?? []);
     return admins.contains(uid);
+  }
+
+  Future<bool> isUserMember(String groupId) async {
+    final uid = _auth.currentUser?.uid;
+    if (uid == null) return false;
+
+    final groupDoc = await _db.collection('groups').doc(groupId).get();
+    final members = List<String>.from(groupDoc.data()?['members'] ?? []);
+    return members.contains(uid);
   }
 
   // === CONTRIBUTIONS ===
@@ -234,10 +277,14 @@ class FirestoreService {
     final uid = _auth.currentUser?.uid;
     if (uid == null) return;
 
-    await _db.collection('groups').doc(groupId).collection('messages').add({
+    final messageId = _uuid.v4();
+
+    await _db.collection('groups').doc(groupId).collection('messages').doc(messageId).set({
+      'messageId': messageId,
       'userId': uid,
       'message': message,
       'sentAt': FieldValue.serverTimestamp(),
+      'readBy': [uid],
     });
   }
 
@@ -248,6 +295,58 @@ class FirestoreService {
         .collection('messages')
         .orderBy('sentAt', descending: true)
         .snapshots();
+  }
+
+  Future<void> updateMessage({
+    required String groupId,
+    required String messageId,
+    required Map<String, dynamic> updatedData,
+  }) async {
+    await _db
+        .collection('groups')
+        .doc(groupId)
+        .collection('messages')
+        .doc(messageId)
+        .update(updatedData);
+  }
+
+  Future<void> markMessageAsRead({
+    required String groupId,
+    required String messageId,
+    required String userId,
+  }) async {
+    final messageRef = _db
+        .collection('groups')
+        .doc(groupId)
+        .collection('messages')
+        .doc(messageId);
+
+    final snapshot = await messageRef.get();
+    if (snapshot.exists) {
+      List<dynamic> readBy = snapshot.data()?['readBy'] ?? [];
+      if (!readBy.contains(userId)) {
+        readBy.add(userId);
+        await messageRef.update({'readBy': readBy});
+      }
+    }
+  }
+
+  /// ✅ Add reaction to a message
+  Future<void> addReaction({
+    required String groupId,
+    required String messageId,
+    required String userId,
+    required String emoji,
+  }) async {
+    final messageRef = _db
+        .collection('groups')
+        .doc(groupId)
+        .collection('messages')
+        .doc(messageId);
+
+    await messageRef.update({
+      'reactions.$userId': emoji,
+    });
   }
 
   // === HELPERS ===
