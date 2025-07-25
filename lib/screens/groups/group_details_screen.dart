@@ -1,16 +1,18 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import '../../services/firestore_service.dart';
-import 'group_chat_screen.dart'; // make sure to import your chat screen here
+import 'group_chat_screen.dart';
 
 class GroupDetailsScreen extends StatefulWidget {
   final String groupId;
   final bool isAdmin;
+  final String groupName;
 
   const GroupDetailsScreen({
     super.key,
     required this.groupId,
     required this.isAdmin,
+    required this.groupName,
   });
 
   @override
@@ -32,7 +34,7 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen> with SingleTick
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text("User approved successfully")),
     );
-    setState(() {}); // Refresh
+    setState(() {});
   }
 
   Future<void> rejectRequest(String userId) async {
@@ -40,14 +42,14 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen> with SingleTick
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text("User rejected")),
     );
-    setState(() {}); // Refresh
+    setState(() {});
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Group Details"),
+        title: Text(widget.groupName),
         backgroundColor: Colors.green,
         foregroundColor: Colors.white,
         bottom: TabBar(
@@ -138,29 +140,62 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen> with SingleTick
   }
 
   Widget _buildSettingsTab() {
-    return Center(
-      child: ElevatedButton.icon(
-        icon: const Icon(Icons.chat),
-        label: const Text('Open Chat'),
-        style: ElevatedButton.styleFrom(
-          backgroundColor: Colors.green,
-        ),
-        onPressed: () async {
-          // Fetch group name from Firestore
-          final groupDoc = await FirebaseFirestore.instance.collection('groups').doc(widget.groupId).get();
-          final groupName = groupDoc.data()?['name'] ?? 'Group Chat';
+    return FutureBuilder<DocumentSnapshot>(
+      future: FirebaseFirestore.instance.collection('groups').doc(widget.groupId).get(),
+      builder: (context, snapshot) {
+        if (!snapshot.hasData) return const Center(child: CircularProgressIndicator());
 
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => GroupChatScreen(
-                groupId: widget.groupId,
-                groupName: groupName,
+        final groupData = snapshot.data!.data() as Map<String, dynamic>;
+        final isPaused = groupData['isPaused'] ?? false;
+
+        return Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              ElevatedButton.icon(
+                icon: const Icon(Icons.chat),
+                label: const Text('Open Chat'),
+                style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => GroupChatScreen(
+                        groupId: widget.groupId,
+                        groupName: widget.groupName,
+                      ),
+                    ),
+                  );
+                },
               ),
-            ),
-          );
-        },
-      ),
+              const SizedBox(height: 20),
+              ElevatedButton.icon(
+                icon: Icon(isPaused ? Icons.play_arrow : Icons.pause),
+                label: Text(isPaused ? 'Resume Ajo Rotation' : 'Pause Ajo Rotation'),
+                style: ElevatedButton.styleFrom(backgroundColor: Colors.orange),
+                onPressed: () async {
+                  if (isPaused) {
+                    await _firestoreService.resumeAjo(widget.groupId);
+                  } else {
+                    await _firestoreService.pauseAjo(widget.groupId);
+                  }
+                  setState(() {});
+                },
+              ),
+              const SizedBox(height: 20),
+              ElevatedButton.icon(
+                icon: const Icon(Icons.settings),
+                label: const Text('Update Group Settings'),
+                style: ElevatedButton.styleFrom(backgroundColor: Colors.blueGrey),
+                onPressed: () {
+                  // Future: Navigate to settings update screen
+                },
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 }

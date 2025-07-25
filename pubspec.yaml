@@ -24,6 +24,9 @@ dependencies:
   # ✅ Date formatting support
   intl: ^0.20.2
 
+  # ✅ Emoji picker for chat
+  emoji_picker_flutter: ^1.6.1
+
   # (Optional) For state management or UI improvements:
   provider: ^6.1.2
   uuid: ^4.5.1

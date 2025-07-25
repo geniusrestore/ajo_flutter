@@ -4,6 +4,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 
 import 'package:ajo/screens/main_navigation_screen.dart';
 import 'profile_setup_screen.dart';
+import 'forgot_password_screen.dart'; // <-- Added import
 
 class AuthScreen extends StatefulWidget {
   const AuthScreen({Key? key}) : super(key: key);
@@ -178,6 +179,16 @@ class _AuthScreenState extends State<AuthScreen> {
                       onPressed: _submit,
                       child: Text(isLogin ? 'Login' : 'Register'),
                     ),
+              if (isLogin)
+                TextButton(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => const ForgotPasswordScreen()),
+                    );
+                  },
+                  child: const Text('Forgot Password?'),
+                ),
               const SizedBox(height: 10),
               TextButton(
                 onPressed: () {

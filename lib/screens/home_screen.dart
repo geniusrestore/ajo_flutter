@@ -22,25 +22,22 @@ class _HomeScreenState extends State<HomeScreen> {
     loadUserData();
   }
 
-  Future<void> loadUserData() async {
-    final userDoc = await _firestoreService.getCurrentUserDoc();
-    if (userDoc != null) {
-      final data = userDoc.data() as Map<String, dynamic>;
-      final name = data['name'] ?? 'User';
-      final List<dynamic> groupIds = data['joinedGroups'] ?? [];
+Future<void> loadUserData() async {
+  final userDoc = await _firestoreService.getCurrentUserDoc();
+  if (userDoc != null) {
+    final data = userDoc.data() as Map<String, dynamic>;
+    final name = data['name'] ?? 'User';
+    final userId = userDoc.id;
 
-      final groupDocs = await _firestoreService.getUserGroups(
-        groupIds.map((id) => id.toString()).toList(),
-      );
+    // Load all groups user belongs to
+    final userGroups = await _firestoreService.getUserGroups(userId);
 
-      setState(() {
-        userName = name;
-        groups = groupDocs
-            .map((doc) => doc.data() as Map<String, dynamic>)
-            .toList();
-      });
-    }
+    setState(() {
+      userName = name;
+      groups = userGroups;
+    });
   }
+}
 
   @override
   Widget build(BuildContext context) {
