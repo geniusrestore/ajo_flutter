@@ -70,44 +70,52 @@ Future<void> sendPasswordResetEmail(String email) async {
 }
   // === GROUP METHODS ===
 
-  Future<String?> createGroup({
-    required String groupName,
-    required String description,
-    required double amount,
-    required int frequencyDays,
-    String? groupImageUrl,
-  }) async {
-    final uid = _auth.currentUser?.uid;
-    if (uid == null) return null;
+Future<String?> createGroup({
+  required String groupName,
+  required String description,
+  required double amount,
+  required int frequencyDays,
+  String? groupImageUrl,
+}) async {
+  final uid = _auth.currentUser?.uid;
+  if (uid == null) return null;
 
-    final groupRef = _db.collection('groups').doc();
+  final groupRef = _db.collection('groups').doc();
 
-    await groupRef.set({
-      'groupId': groupRef.id,
-      'createdBy': uid,
-      'groupName': groupName,
-      'description': description,
-      'amount': amount,
-      'frequencyDays': frequencyDays,
-      'contributionAmount': amount,
-      'adminFeePercent': 5,
-      'groupWalletBalance': 0.0,
-      'groupImageUrl': groupImageUrl,
-      'createdAt': FieldValue.serverTimestamp(),
-      'members': [uid],
-      'admins': [uid],
-      'public': true,
-      'payoutOrder': [uid],
-      'currentRound': 1,
-      'nextPayoutUserId': uid,
-    });
+  await groupRef.set({
+    'groupId': groupRef.id,
+    'createdBy': uid,
+    'groupName': groupName,
+    'description': description,
+    'amount': amount,
+    'frequencyDays': frequencyDays,
+    'contributionAmount': amount,
+    'adminFeePercent': 5,
+    'groupWalletBalance': 0.0,
+    'groupImageUrl': groupImageUrl,
+    'createdAt': FieldValue.serverTimestamp(),
+    'members': [uid], // legacy support
+    'admins': [uid],  // legacy support
+    'public': true,
+    'payoutOrder': [uid],
+    'currentRound': 1,
+    'nextPayoutUserId': uid,
+  });
 
-    await _db.collection('users').doc(uid).update({
-      'joinedGroups': FieldValue.arrayUnion([groupRef.id]),
-    });
+  // ✅ Add admin user to group's members subcollection
+  await groupRef.collection('members').doc(uid).set({
+    'userId': uid,
+    'isAdmin': true,
+    'joinedAt': FieldValue.serverTimestamp(),
+  });
 
-    return groupRef.id;
-  }
+  // ✅ Add group to user's joinedGroups
+  await _db.collection('users').doc(uid).update({
+    'joinedGroups': FieldValue.arrayUnion([groupRef.id]),
+  });
+
+  return groupRef.id;
+}
 
   Future<void> sendJoinRequest(String groupId) async {
     final uid = _auth.currentUser?.uid;
