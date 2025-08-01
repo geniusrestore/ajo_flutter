@@ -1,31 +1,39 @@
 plugins {
     id("com.android.application")
-    // START: FlutterFire Configuration
-    id("com.google.gms.google-services")
-    // END: FlutterFire Configuration
-    kotlin("android")  // if your app uses Kotlin
+    id("kotlin-android")
+    // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
+    id("dev.flutter.flutter-gradle-plugin")
 }
 
 android {
-    compileSdk = 33
+    namespace = "com.example.ajo_pay"
+    compileSdk = flutter.compileSdkVersion
+    ndkVersion = "27.0.11718014" 
+
+    compileOptions {
+        sourceCompatibility = JavaVersion.VERSION_11
+        targetCompatibility = JavaVersion.VERSION_11
+    }
+
+    kotlinOptions {
+        jvmTarget = JavaVersion.VERSION_11.toString()
+    }
 
     defaultConfig {
-        applicationId = "com.example.yourapp"  // Replace with your app ID
-        minSdk = 21
-        targetSdk = 33
-        versionCode = 1
-        versionName = "1.0"
+        applicationId = "com.example.ajo_pay"
+        minSdk = flutter.minSdkVersion
+        targetSdk = flutter.targetSdkVersion
+        versionCode = flutter.versionCode
+        versionName = flutter.versionName
     }
 
     buildTypes {
-        getByName("release") {
-            isMinifyEnabled = false
-            // proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
+        release {
+            signingConfig = signingConfigs.getByName("debug")
         }
     }
 }
 
-dependencies {
-    implementation("org.jetbrains.kotlin:kotlin-stdlib:1.8.22")
-    // Your other dependencies here
+flutter {
+    source = "../.."
 }
